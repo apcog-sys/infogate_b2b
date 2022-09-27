@@ -1,0 +1,110 @@
+<html>
+<body>
+
+
+<button id="btn1" onclick="fetch_data()">get data</button>
+
+</body>
+<script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<script>
+    function fetch_data(){
+        var end_point = "http://localhost:3000/userTabs";
+        //var end_point='http://localhost:3000/entity/getAllEntities'
+        var send_data={event:"user_tab"}
+        const getData = async(url=end_point,api_method="GET",api_body=send_data) => {     
+        
+        var response;
+        console.log("getting data");
+        response = await fetch(url,{
+            method: api_method,
+           
+            headers : {
+                'Access-Control-Allow-Headers':"*",
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+                
+            }
+        });
+        
+        if (response.ok) {
+            const raps = await response.json(); myresult = raps;
+        }
+        return (myresult);
+        }
+        getData().then(data => {
+        console.log(data.Admin)
+        //console.log(data.controls)
+        //init_tab_prepartion(data[0],data[1],data[2])   
+        });
+    }
+    /*
+    function fetch(){
+        $.ajax({
+            url: 'http://localhost:3000/entity/getAllEntities',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Access-Control-Allow-Origin': '*',
+                'Accept': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            type: "GET", // or type:"GET" or type:"PUT" 
+            dataType: "json",
+            data: {
+            },
+            success: function (result) {
+                console.log(result);
+            },
+            error: function () {
+                console.log("error");
+            }
+        });
+    }*/
+
+
+    /*
+[
+  {
+    "id": 1,
+    "entity_name": "tata",
+    "admin_key": "tata_key",
+    "inbox_url": "tataurl",
+    "status": "active",
+    "room_ids": "{\"room\":\"S100\"}",
+    "admin_uid": "tata_uid",
+    "admin_pwd": "tata_pwd",
+    "admin_email": "tata_email",
+    "admin_phone": "tata_phone",
+    "createdAt": "2022-05-31T11:30:47.000Z",
+    "updatedAt": "2022-05-31T11:30:47.000Z"
+  }
+]
+*/
+
+/*
+(3) [Array(10), {…}, Array(6)]
+0: (10) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+1:
+create: true
+edit: true
+enable: true
+get: "user_id, first_name, last_name, user_name, email, phone, status"
+open: true
+print: true
+roles: ['Admin']
+show: (6) ['first_name', 'last_name', 'user_name', 'email', 'phone', 'status']
+view: true
+[[Prototype]]: Object
+2: Array(6)
+0: {class: 'glyphicon glyphicon-pencil', function: 'create_modal(0)', name: 'new', type: 'button'}
+1: {class: 'btn btn-primary btn-xs my-xs-btn', function: 'first_page()', name: 'first', type: 'button'}
+2: {class: 'btn btn-primary btn-xs my-xs-btn', function: 'previous_page()', name: 'prev', type: 'button'}
+3: {class: 'btn btn-primary btn-xs my-xs-btn', function: 'next_page()', name: 'next', type: 'button'}
+4: {class: 'btn btn-primary btn-xs my-xs-btn', function: '', name: 'last', type: 'button'}
+5: {class: 'btn btn-primary btn-xs my-xs-btn', function: '', name: 'print', type: 'button'}
+*/
+</script>
+
+</html>
+

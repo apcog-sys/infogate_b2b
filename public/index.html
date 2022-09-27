@@ -1,0 +1,3631 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <title>Bootstrap Example</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+    <script type="text/javascript" src="./user_tabs.js"></script>
+  <style>
+    
+    .modal {
+    display: none;
+    position: fixed; 
+    padding-top: 50px;
+    left: 0; 
+    overflow:scroll;
+    top: 0;
+    width: 100%;
+    height: 100%; 
+    background-color: rgba(47, 44, 44, 0.5);
+  }
+  .modal-content {
+    position: relative; 
+    background-color: rgb(7, 8, 7);
+    padding: 20px; 
+    margin: auto; 
+    width: 75%;  
+    
+    -webkit-animation-name: animatetop;
+    -webkit-animation-duration: 0.4s;
+    animation-name: animatetop;
+    animation-duration: 0.4s
+  }
+  .close-btn {
+    float: right; 
+    color: lightgray; 
+    font-size: 24px;  
+    font-weight: bold;
+  }
+  .close-btn:hover {
+    color: darkgray;
+  }
+
+  .iframe button {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  color: red;
+  }
+  @-webkit-keyframes animatetop {
+    from {top:-300px; opacity:0} 
+    to {top:0; opacity:1}
+  }
+  @keyframes animatetop {
+    from {top:-300px; opacity:0}
+    to {top:0; opacity:1}
+  }
+
+  #footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+  }
+
+  </style>
+    
+  </head>
+
+  <body>
+      <!-- Header and tittle div-->
+      <div id="title_header">
+        <h2 class="text-center">infogate B2B</h2>
+        <button id="test1" onclick="account_update()">TEST</button>
+      </div>
+
+      <div id="main_page_tab_div" class="container " >
+        
+        <ul id="tab_list" class="nav nav-tabs ">
+        </ul>
+        <div id="tab_page_content"class="tab-content form-horizontal">
+        </div>
+        
+          <div class="modal" id="myModal">
+            <div class="modal-header">
+              <span class="close-btn">&times;</span>
+            </div>
+            <div id="modal_content" class="modal-content">  </div>
+            <div id="modal_footer" class="modal-footer">
+              
+          </div>
+          
+          <div id='div_iframe'>
+            <iframe id="myIframe" style="display:block" frameborder="0" marginwidth="0" marginheight="0"  width="100%" height="50%" ></iframe>  
+          </div>
+      </div>
+      
+      <!-- footer  div -->
+      <div id="footer"> powered by apcog </div>
+    
+  </body>
+
+  <script>
+      // Tab list 
+      var tab_content={
+          "Super_Admin":{
+              "tab_list":[
+              {"Name":"Entity","function":"get_entity_list()"},
+              {"Name":"Room","function":"get_room_list()"},
+              {"Name":"Inbox","function":"get_inbox_list()"},
+              {"Name":"Message_Queue","function":"get_msgq_list()"},
+              {"Name":"Archive","function":"get_archive_list()"},
+              {"Name":"Users","function":"get_user_list()"},
+              {"Name":"Key_Registration","function":"get_key_reg_list()"}
+              ]
+          },
+          "Entity_Admin":{
+              "tab_list":[
+              {"Name":"Room","function":"get_room_list()"},
+              {"Name":"Inbox","function":"get_inbox_list()"},
+              {"Name":"Message_Queue","function":"get_msgq_list()"},
+              {"Name":"Archive","function":"get_archive_list()"}
+              ]
+          },
+          "User":{
+              "tab_list":[
+              {"Name":"Inbox","function":"get_inbox_list()"},
+              {"Name":"Message_Queue","function":"get_msgq_list()"},
+              ]
+          }
+      }
+      // entity json config
+      var entity_list={
+          "event":"entity_list",
+          "target":"entity",
+          "handler":"entity_list",
+          "query_str":"",
+          "controls":[
+            {"type":"button","name":"new","function":"create_modal(1)","class":"glyphicon glyphicon-pencil"},
+            {"type":"button","name":"first","function":"first_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"prev","function":"previous_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"next","function":"next_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"last","function":"","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"print","function":"","class":"btn btn-primary btn-xs my-xs-btn"}
+          ],
+          "page_attributes":{
+            "permissions_set1":{
+                "get":"id, entity_name,  room_ids, activation_code, status",
+                "show":[ 
+                  "id",
+                  "entity_name",
+                  "status",
+                  "room_ids",
+                  "activation_code",
+                  "status"
+                ],
+                "create":true,
+                "view":true,
+                "edit":true,
+                "open":true,
+                "enable":true,
+                "print":true,
+                "roles":[
+                  "Admin"
+                ]
+            },
+            "permissions_set2":{
+              "get":"id, entity_name,  room_ids, activation_code, status",
+                "show":[ 
+                  "id",
+                  "entity_name",
+                  "status",
+                  "room_ids",
+                  "activation_code",
+                  "status"
+                ],
+                "create":false,
+                "view":true,
+                "edit":false,
+                "open":true,
+                "enable":false,
+                "print":true,
+                "roles":[
+                  "User"
+                ]
+            },
+            "href":{
+                "host":"localhost",
+                "login_name":"root",
+                "password":"root"
+            }
+          }
+      }
+      var get_entity_details={
+   "event":"get_entity_details",
+   "target":"admin",
+   "handler":"function name",
+   "query_str":"",
+   "ref_query_str1":"",
+   "ref_query_str2":"",
+   "fields":[
+     {
+        "id":{
+           "datatype":"text",
+           "mandatory":true,
+           "show":true,
+           "edit":true,
+           "create":false,
+           "active/cancel":"",
+           "default":[
+              {
+                 "value":"",
+                 "document_query":""
+              }
+           ],
+           "inputType":[
+              "dropdown",
+              "speech",
+              "handwritten",
+              "helper_function"
+           ],
+           "sym_validation":"",
+           "stm_validation":""
+        }
+     }, 
+     {
+         "entity_name":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "room_ids":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+        "activation_code":{
+           "datatype":"text",
+           "mandatory":true,
+           "show":true,
+           "edit":true,
+           "create":true,
+           "active/cancel":"",
+           "default":[
+              {
+                 "value":"",
+                 "document_query":""
+              }
+           ],
+           "inputType":[
+              "dropdown",
+              "speech",
+              "handwritten",
+              "helper_function"
+           ],
+           "sym_validation":"",
+           "stm_validation":""
+        }
+     },
+     {
+        "status":{
+           "datatype":"text",
+           "mandatory":true,
+           "show":true,
+           "edit":true,
+           "create":true,
+           "active/cancel":"",
+           "default":[
+              {
+                 "value":"",
+                 "document_query":""
+              }
+           ],
+           "inputType":[
+              "dropdown",
+              "speech",
+              "handwritten",
+              "helper_function"
+           ],
+           "sym_validation":"",
+           "stm_validation":""
+        }
+     }
+   ],
+   "page_attributes":{
+      "href":{
+         "host":"localhost",
+         "login_name":"root",
+         "password":"root"
+      },
+      "permissions_set1":{
+        "get":"id, entity_name,  room_ids, activation_code, status",
+          "show":[ 
+            "id",
+            "entity_name",
+            "status",
+            "room_ids",
+            "activation_code",
+            "status"
+          ],
+         "create":true,
+         "view":true,
+         "edit":true,
+         "open":false,
+         "enable":true,
+         "print":true,
+         "roles":[
+            "Admin",
+            "user"
+         ]
+      },
+      "permissions_set2":{
+        "get":"id, entity_name,  room_ids, activation_code, status",
+        "show":[ 
+          "id",
+          "entity_name",
+          "status",
+          "room_ids",
+          "activation_code",
+          "status"
+          ],
+         "create":true,
+         "view":true,
+         "edit":true,
+         "open":false,
+         "enable":true,
+         "print":true,
+         "roles":[
+            "Admin",
+            "user"
+         ]
+      }
+   }
+}
+      // room json config
+      var room_list={
+    "event":"room_list",
+    "target":"room",
+    "handler":"room_list",
+    "query_str":"",
+    "controls":[
+      {"type":"button","name":"new","function":"create_modal(1)","class":"glyphicon glyphicon-pencil"},
+      {"type":"button","name":"first","function":"first_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+      {"type":"button","name":"prev","function":"previous_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+      {"type":"button","name":"next","function":"next_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+      {"type":"button","name":"last","function":"","class":"btn btn-primary btn-xs my-xs-btn"},
+      {"type":"button","name":"print","function":"","class":"btn btn-primary btn-xs my-xs-btn"}
+    ],
+    "page_attributes":{
+       "permissions_set1":{
+          "get":"id, room_name, message_types, pub_user_ids, sub_user_ids, room_type, q_limit, q_occupancy, timeout, retries",
+          "show":[ 
+            "id", 
+            "room_name", 
+            "message_types",
+            "pub_user_ids", 
+            "sub_user_ids", 
+            "room_type",
+            "q_limit", 
+            "q_occupancy", 
+            "timeout", 
+            "retries"
+          ],
+          "create":true,
+          "view":true,
+          "edit":true,
+          "open":true,
+          "enable":true,
+          "print":true,
+          "roles":[
+             "Admin"
+          ]
+       },
+       "permissions_set2":{
+        "get":"id, room_name, message_types, pub_user_ids, sub_user_ids, room_type, q_limit, q_occupancy, timeout, retries",
+          "show":[ 
+            "id", 
+            "room_name", 
+            "message_types",
+            "pub_user_ids", 
+            "sub_user_ids", 
+            "room_type",
+            "q_limit", 
+            "q_occupancy", 
+            "timeout", 
+            "retries"
+          ],
+          "create":true,
+          "view":true,
+          "edit":true,
+          "open":true,
+          "enable":true,
+          "print":true,
+          "roles":[
+             "User"
+          ]
+       },
+       "href":{
+          "host":"localhost",
+          "login_name":"root",
+          "password":"root"
+       }
+    }
+ }
+      var get_room_details={
+        "event":"get_room_details",
+        "target":"admin",
+        "handler":"function name",
+        "query_str":"",
+        "ref_query_str1":"",
+        "ref_query_str2":"",
+        "fields":[
+          {
+            "id":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                  {
+                      "value":"",
+                      "document_query":""
+                  }
+                ],
+                "inputType":[
+                  "dropdown",
+                  "speech",
+                  "handwritten",
+                  "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+            }
+          }, 
+          {
+              "room_name":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                    {
+                      "value":"",
+                      "document_query":""
+                    }
+                ],
+                "inputType":[
+                    "dropdown",
+                    "speech",
+                    "handwritten",
+                    "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+              }
+          },
+          {
+              "message_types":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                    {
+                      "value":"",
+                      "document_query":""
+                    }
+                ],
+                "inputType":[
+                    "dropdown",
+                    "speech",
+                    "handwritten",
+                    "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+              }
+          },
+          {
+              "pub_user_ids":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                    {
+                      "value":"",
+                      "document_query":""
+                    }
+                ],
+                "inputType":[
+                    "dropdown",
+                    "speech",
+                    "handwritten",
+                    "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+              }
+          },
+          {
+              "sub_user_ids":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                    {
+                      "value":"",
+                      "document_query":""
+                    }
+                ],
+                "inputType":[
+                    "dropdown",
+                    "speech",
+                    "handwritten",
+                    "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+              }
+          },
+          {
+              "room_type":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                    {
+                      "value":"",
+                      "document_query":""
+                    }
+                ],
+                "inputType":[
+                    "dropdown",
+                    "speech",
+                    "handwritten",
+                    "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+              }
+          },
+          {
+              "q_limit":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                    {
+                      "value":"",
+                      "document_query":""
+                    }
+                ],
+                "inputType":[
+                    "dropdown",
+                    "speech",
+                    "handwritten",
+                    "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+              }
+          },
+          {
+              "q_occupancy":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                    {
+                      "value":"",
+                      "document_query":""
+                    }
+                ],
+                "inputType":[
+                    "dropdown",
+                    "speech",
+                    "handwritten",
+                    "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+              }
+          },
+          {
+              "timeout":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                    {
+                      "value":"",
+                      "document_query":""
+                    }
+                ],
+                "inputType":[
+                    "dropdown",
+                    "speech",
+                    "handwritten",
+                    "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+              }
+          },
+          {
+            "retries":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":true,
+                "active/cancel":"",
+                "default":[
+                  {
+                      "value":"",
+                      "document_query":""
+                  }
+                ],
+                "inputType":[
+                  "dropdown",
+                  "speech",
+                  "handwritten",
+                  "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+            }
+          }        
+          
+        ],
+        "page_attributes":{
+          "href":{
+              "host":"localhost",
+              "login_name":"root",
+              "password":"root"
+          },
+          "permissions_set1":{
+            "get":"id, room_name, message_types, member_details, pub_user_ids, sub_user_ids, q_limit, q_occupancy, timeout, retries",
+          "show":[ 
+            "id", 
+            "room_name", 
+            "message_types",
+            "member_details",
+            "pub_user_ids", 
+            "sub_user_ids", 
+            "q_limit", 
+            "q_occupancy", 
+            "timeout", 
+            "retries"
+          ],
+              "create":true,
+              "view":true,
+              "edit":true,
+              "open":false,
+              "enable":true,
+              "print":true,
+              "roles":[
+                "Admin",
+                "user"
+              ]
+          },
+          "permissions_set2":{
+            "get":"id, room_name, message_types, member_details, pub_user_ids, sub_user_ids, q_limit, q_occupancy, timeout, retries",
+          "show":[ 
+            "id", 
+            "room_name", 
+            "message_types",
+            "member_details",
+            "pub_user_ids", 
+            "sub_user_ids", 
+            "q_limit", 
+            "q_occupancy", 
+            "timeout", 
+            "retries"
+          ],
+              "create":true,
+              "view":true,
+              "edit":true,
+              "open":false,
+              "enable":true,
+              "print":true,
+              "roles":[
+                "Admin",
+                "user"
+              ]
+          }
+        }
+    }
+      // inbox json config
+      var inbox_list={
+          "event":"inbox_list",
+          "target":"inbox",
+          "handler":"inbox",
+          "query_str":"",
+          "controls":[
+            {"type":"button","name":"new","function":"create_modal(1)","class":"glyphicon glyphicon-pencil"},
+            {"type":"button","name":"first","function":"first_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"prev","function":"previous_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"next","function":"next_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"last","function":"","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"print","function":"","class":"btn btn-primary btn-xs my-xs-btn"}
+          ],
+          "page_attributes":{
+            "permissions_set1":{
+                "get":"id, target_userid, room_id, in_stamp, out_stamp, when_to_deliver, delivery_stamp, msg_id, retries, status",
+                "show":[ 
+                  "id", 
+                  "target_userid",
+                  "room_id", 
+                  "in_stamp", 
+                  "out_stamp", 
+                  "when_to_deliver",
+                  "delivery_stamp", 
+                  "msg_id", 
+                  "retries", 
+                  "status"
+                ],
+                "create":true,
+                "view":true,
+                "edit":true,
+                "open":true,
+                "enable":true,
+                "print":true,
+                "roles":[
+                  "Admin"
+                ]
+            },
+            "permissions_set2":{
+              "get":"id, target_userid, room_id, in_stamp, out_stamp, when_to_deliver, delivery_stamp, msg_id, retries, status",
+                "show":[ 
+                  "id", 
+                  "target_userid",
+                  "room_id", 
+                  "in_stamp", 
+                  "out_stamp", 
+                  "when_to_deliver",
+                  "delivery_stamp", 
+                  "msg_id", 
+                  "retries", 
+                  "status"
+                ],
+                "create":false,
+                "view":true,
+                "edit":false,
+                "open":true,
+                "enable":false,
+                "print":true,
+                "roles":[
+                  "User"
+                ]
+            },
+            "href":{
+                "host":"localhost",
+                "login_name":"root",
+                "password":"root"
+            }
+          }
+      }
+      var get_inbox_details={
+   "event":"get_entity_details",
+   "target":"admin",
+   "handler":"function name",
+   "query_str":"",
+   "ref_query_str1":"",
+   "ref_query_str2":"",
+   "fields":[
+     {
+        "id":{
+           "datatype":"text",
+           "mandatory":true,
+           "show":true,
+           "edit":true,
+           "create":false,
+           "active/cancel":"",
+           "default":[
+              {
+                 "value":"",
+                 "document_query":""
+              }
+           ],
+           "inputType":[
+              "dropdown",
+              "speech",
+              "handwritten",
+              "helper_function"
+           ],
+           "sym_validation":"",
+           "stm_validation":""
+        }
+     }, 
+     {
+         "target_entity":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "room_id":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "in_stamp":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "out_stamp":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "delivery_stamp":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "msg_id":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+        "retries":{
+           "datatype":"text",
+           "mandatory":true,
+           "show":true,
+           "edit":true,
+           "create":true,
+           "active/cancel":"",
+           "default":[
+              {
+                 "value":"",
+                 "document_query":""
+              }
+           ],
+           "inputType":[
+              "dropdown",
+              "speech",
+              "handwritten",
+              "helper_function"
+           ],
+           "sym_validation":"",
+           "stm_validation":""
+        }
+     },
+     {
+        "status":{
+           "datatype":"text",
+           "mandatory":true,
+           "show":true,
+           "edit":true,
+           "create":true,
+           "active/cancel":"",
+           "default":[
+              {
+                 "value":"",
+                 "document_query":""
+              }
+           ],
+           "inputType":[
+              "dropdown",
+              "speech",
+              "handwritten",
+              "helper_function"
+           ],
+           "sym_validation":"",
+           "stm_validation":""
+        }
+     }
+     
+   ],
+   "page_attributes":{
+      "href":{
+         "host":"localhost",
+         "login_name":"root",
+         "password":"root"
+      },
+      "permissions_set1":{
+         "get":"id,entity_name,admin_key,inbox_url,status,room_ids,admin_uid,admin_pwd,admin_email,admin_phone,createdAt,updatedAt",
+          "show":[ 
+            "id",
+            "entity_name",
+            "admin_key",
+            "inbox_url",
+            "status",
+            "room_ids",
+            "admin_uid",
+            "admin_pwd",
+            "admin_email",
+            "admin_phone",
+            "createdAt",
+            "updatedAt"
+          ],
+         "create":true,
+         "view":true,
+         "edit":true,
+         "open":false,
+         "enable":true,
+         "print":true,
+         "roles":[
+            "Admin",
+            "user"
+         ]
+      },
+      "permissions_set2":{
+         "get":"id,entity_name,admin_key,inbox_url,status,room_ids,admin_uid,admin_pwd,admin_email,admin_phone,createdAt,updatedAt",
+          "show":[ 
+            "id",
+            "entity_name",
+            "admin_key",
+            "inbox_url",
+            "status",
+            "room_ids",
+            "admin_uid",
+            "admin_pwd",
+            "admin_email",
+            "admin_phone",
+            "createdAt",
+            "updatedAt"
+          ],
+         "create":true,
+         "view":true,
+         "edit":true,
+         "open":false,
+         "enable":true,
+         "print":true,
+         "roles":[
+            "Admin",
+            "user"
+         ]
+      }
+   }
+}
+      // msgq json config
+      var msgq_list={
+          "event":"msgq_list",
+          "target":"msgq",
+          "handler":"msgq",
+          "query_str":"",
+          "controls":[
+            {"type":"button","name":"new","function":"create_modal(1)","class":"glyphicon glyphicon-pencil"},
+            {"type":"button","name":"first","function":"first_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"prev","function":"previous_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"next","function":"next_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"last","function":"","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"print","function":"","class":"btn btn-primary btn-xs my-xs-btn"}
+          ],
+          "page_attributes":{
+            "permissions_set1":{
+                "get":"id, msg_body, createdAt, updatedAt",
+                "show":[ 
+                  "id", 
+                  "msg_body"
+                ],
+                "create":true,
+                "view":true,
+                "edit":true,
+                "open":true,
+                "enable":true,
+                "print":true,
+                "roles":[
+                  "Admin"
+                ]
+            },
+            "permissions_set2":{
+              "get":"id, msg_id, msg_body, createdAt, updatedAt",
+                "show":[ 
+                  "id", 
+                  "msg_id", 
+                  "msg_body", 
+                  "createdAt", 
+                  "updatedAt"
+                ],
+                "create":false,
+                "view":true,
+                "edit":false,
+                "open":true,
+                "enable":false,
+                "print":true,
+                "roles":[
+                  "User"
+                ]
+            },
+            "href":{
+                "host":"localhost",
+                "login_name":"root",
+                "password":"root"
+            }
+          }
+      }
+      var get_msgq_details={
+   "event":"get_msgq_details",
+   "target":"admin",
+   "handler":"function name",
+   "query_str":"",
+   "ref_query_str1":"",
+   "ref_query_str2":"",
+   "fields":[
+     {
+        "id":{
+           "datatype":"text",
+           "mandatory":true,
+           "show":true,
+           "edit":true,
+           "create":false,
+           "active/cancel":"",
+           "default":[
+              {
+                 "value":"",
+                 "document_query":""
+              }
+           ],
+           "inputType":[
+              "dropdown",
+              "speech",
+              "handwritten",
+              "helper_function"
+           ],
+           "sym_validation":"",
+           "stm_validation":""
+        }
+     }, 
+      {
+         "msg_body":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      }
+   ],
+   "page_attributes":{
+      "href":{
+         "host":"localhost",
+         "login_name":"root",
+         "password":"root"
+      },
+      "permissions_set1":{
+        "get":"id, msg_body, createdAt, updatedAt",
+        "show":[ 
+          "id", 
+          "msg_body"
+        ],
+         "create":true,
+         "view":true,
+         "edit":true,
+         "open":false,
+         "enable":true,
+         "print":true,
+         "roles":[
+            "Admin",
+            "user"
+         ]
+      },
+      "permissions_set2":{
+        "get":"id, msg_body, createdAt, updatedAt",
+        "show":[ 
+          "id", 
+          "msg_body"
+        ],
+        "create":true,
+        "view":true,
+        "edit":true,
+        "open":false,
+        "enable":true,
+        "print":true,
+        "roles":[
+          "Admin",
+          "user"
+        ]
+      }
+   }
+}
+      // archive json config
+      var archive_list={ 
+          "event":"archive_list",
+          "target":"archive",
+          "handler":"archive",
+          "query_str":"",
+          "controls":[
+            {"type":"button","name":"first","function":"first_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"prev","function":"previous_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"next","function":"next_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"last","function":"","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"print","function":"","class":"btn btn-primary btn-xs my-xs-btn"}
+          ],
+          "page_attributes":{
+            "permissions_set1":{
+                "get":"id, inbox_id, target_entity, room_id, in_stamp, out_stamp, delivery_stamp, msg_id, status",
+                "show":[ 
+                "id", 
+                "inbox_id", 
+                "target_entity", 
+                "room_id", 
+                "in_stamp", 
+                "out_stamp", 
+                "delivery_stamp", 
+                "msg_id", 
+                "status"
+                ],
+                "create":true,
+                "view":true,
+                "edit":true,
+                "open":true,
+                "enable":true,
+                "print":true,
+                "roles":[
+                  "Admin"
+                ]
+            },
+            "permissions_set2":{
+              "get":"id, inbox_id, target_entity, room_id, in_stamp, out_stamp, delivery_stamp, msg_id, status",
+                "show":[ 
+                "id", 
+                "inbox_id", 
+                "target_entity", 
+                "room_id", 
+                "in_stamp", 
+                "out_stamp", 
+                "delivery_stamp", 
+                "msg_id", 
+                "status"
+                ],
+                "create":false,
+                "view":true,
+                "edit":false,
+                "open":true,
+                "enable":false,
+                "print":true,
+                "roles":[
+                  "User"
+                ]
+            },
+            "href":{
+                "host":"localhost",
+                "login_name":"root",
+                "password":"root"
+            }
+          }
+        }
+      var get_archive_details={
+   "event":"get_archive_details",
+   "target":"admin",
+   "handler":"function name",
+   "query_str":"",
+   "ref_query_str1":"",
+   "ref_query_str2":"",
+   "fields":[
+     {
+        "id":{
+           "datatype":"text",
+           "mandatory":true,
+           "show":true,
+           "edit":true,
+           "create":false,
+           "active/cancel":"",
+           "default":[
+              {
+                 "value":"",
+                 "document_query":""
+              }
+           ],
+           "inputType":[
+              "dropdown",
+              "speech",
+              "handwritten",
+              "helper_function"
+           ],
+           "sym_validation":"",
+           "stm_validation":""
+        }
+     }, 
+     {
+         "inbox_id":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "target_entity":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "room_id":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "in_stamp":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "out_stamp":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "delivery_stamp":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },{
+         "msg_id":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },{
+         "status":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      }
+   ],
+   "page_attributes":{
+      "href":{
+         "host":"localhost",
+         "login_name":"root",
+         "password":"root"
+      },
+      "permissions_set1":{
+         "get":"id,entity_name,admin_key,inbox_url,status,room_ids,admin_uid,admin_pwd,admin_email,admin_phone,createdAt,updatedAt",
+          "show":[ 
+            "id",
+            "entity_name",
+            "admin_key",
+            "inbox_url",
+            "status",
+            "room_ids",
+            "admin_uid",
+            "admin_pwd",
+            "admin_email",
+            "admin_phone",
+            "createdAt",
+            "updatedAt"
+          ],
+         "create":true,
+         "view":true,
+         "edit":true,
+         "open":false,
+         "enable":true,
+         "print":true,
+         "roles":[
+            "Admin",
+            "user"
+         ]
+      },
+      "permissions_set2":{
+         "get":"id,entity_name,admin_key,inbox_url,status,room_ids,admin_uid,admin_pwd,admin_email,admin_phone,createdAt,updatedAt",
+          "show":[ 
+            "id",
+            "entity_name",
+            "admin_key",
+            "inbox_url",
+            "status",
+            "room_ids",
+            "admin_uid",
+            "admin_pwd",
+            "admin_email",
+            "admin_phone",
+            "createdAt",
+            "updatedAt"
+          ],
+         "create":true,
+         "view":true,
+         "edit":true,
+         "open":false,
+         "enable":true,
+         "print":true,
+         "roles":[
+            "Admin",
+            "user"
+         ]
+      }
+   }
+}
+      // user json config
+      var user_list={
+          "event":"user_list",
+          "target":"user",
+          "handler":"user_list",
+          "query_str":"",
+          "controls":[
+            {"type":"button","name":"new","function":"create_modal(1)","class":"glyphicon glyphicon-pencil"},
+            {"type":"button","name":"first","function":"first_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"prev","function":"previous_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"next","function":"next_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"last","function":"","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"print","function":"","class":"btn btn-primary btn-xs my-xs-btn"}
+          ],
+          "page_attributes":{
+            "permissions_set1":{
+                "get":"id, user_name, password, account_key, entity_name, role_name, contact_details, person_or_app_name, role_ids, pub_rooms, sub_rooms, status",
+                "show":[ 
+                "id", 
+                "user_name", 
+                "password", 
+                "account_key", 
+                "entity_name", 
+                "role_name", 
+                "contact_details", 
+                "person_or_app_name", 
+                "role_ids", 
+                "pub_rooms", 
+                "sub_rooms", 
+                "status"
+                ],
+                "create":true,
+                "view":true,
+                "edit":true,
+                "open":true,
+                "enable":true,
+                "print":true,
+                "roles":[
+                  "Admin"
+                ]
+            },
+            "permissions_set2":{
+              "get":"id, user_name, password, account_key, entity_name, role_name, contact_details, person_or_app_name, role_ids, pub_rooms, sub_rooms, status",
+                "show":[ 
+                "id", 
+                "user_name", 
+                "password", 
+                "account_key", 
+                "entity_name", 
+                "role_name", 
+                "contact_details", 
+                "person_or_app_name", 
+                "role_ids", 
+                "pub_rooms", 
+                "sub_rooms", 
+                "status"
+                ],
+                "create":false,
+                "view":true,
+                "edit":false,
+                "open":true,
+                "enable":false,
+                "print":true,
+                "roles":[
+                  "User"
+                ]
+            },
+            "href":{
+                "host":"localhost",
+                "login_name":"root",
+                "password":"root"
+            }
+          }
+      }
+      var get_user_details={
+   "event":"get_user_details",
+   "target":"admin",
+   "handler":"function name",
+   "query_str":"",
+   "ref_query_str1":"",
+   "ref_query_str2":"",
+   "fields":[
+     {
+        "id":{
+           "datatype":"text",
+           "mandatory":true,
+           "show":true,
+           "edit":true,
+           "create":false,
+           "active/cancel":"",
+           "default":[
+              {
+                 "value":"",
+                 "document_query":""
+              }
+           ],
+           "inputType":[
+              "dropdown",
+              "speech",
+              "handwritten",
+              "helper_function"
+           ],
+           "sym_validation":"",
+           "stm_validation":""
+        }
+     }, 
+     {
+         "keys":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "phone_no":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "inbox_url":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "contact_details":{
+            "datatype":"JSON",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "person_or_app_name":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "role_ids":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+        "address/contact":{
+           "datatype":"text",
+           "mandatory":true,
+           "show":true,
+           "edit":true,
+           "create":false,
+           "active/cancel":"",
+           "default":[
+              {
+                 "value":"",
+                 "document_query":""
+              }
+           ],
+           "inputType":[
+              "dropdown",
+              "speech",
+              "handwritten",
+              "helper_function"
+           ],
+           "sym_validation":"",
+           "stm_validation":""
+        }
+      }, 
+      {
+         "ack_await":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "required":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      }
+      
+   ],
+   "page_attributes":{
+      "href":{
+         "host":"localhost",
+         "login_name":"root",
+         "password":"root"
+      },
+      "permissions_set1":{
+        "get":"id, keys, phone_no, inbox_url, contact_details, person_or_app_name, role_ids",
+        "show":[ 
+          "id", 
+          "keys", 
+          "phone_no", 
+          "inbox_url", 
+          "contact_details",
+          "person_or_app_name", 
+          "role_id",
+          "iaddress/contact", 
+          "ack_await", 
+          "required" 
+        ],
+         "create":true,
+         "view":true,
+         "edit":true,
+         "open":false,
+         "enable":true,
+         "print":true,
+         "roles":[
+            "Admin",
+            "user"
+         ]
+      },
+      "permissions_set2":{
+        "get":"id, keys, phone_no, inbox_url, contact_details, person_or_app_name, role_ids",
+        "show":[ 
+          "id", 
+          "keys", 
+          "phone_no", 
+          "inbox_url", 
+          "contact_details",
+          "person_or_app_name", 
+          "role_id",
+          "iaddress/contact", 
+          "ack_await", 
+          "required" 
+
+        ],
+         "create":true,
+         "view":true,
+         "edit":true,
+         "open":false,
+         "enable":true,
+         "print":true,
+         "roles":[
+            "Admin",
+            "user"
+         ]
+      }
+   }
+}
+
+      var priority_details={
+   "event":"priority_details",
+   "target":"admin",
+   "handler":"function name",
+   "query_str":"",
+   "ref_query_str1":"",
+   "ref_query_str2":"",
+   "fields":[
+     {
+        "address/contact":{
+           "datatype":"text",
+           "mandatory":true,
+           "show":true,
+           "edit":true,
+           "create":false,
+           "active/cancel":"",
+           "default":[
+              {
+                 "value":"",
+                 "document_query":""
+              }
+           ],
+           "inputType":[
+              "dropdown",
+              "speech",
+              "handwritten",
+              "helper_function"
+           ],
+           "sym_validation":"",
+           "stm_validation":""
+        }
+     }, 
+     {
+         "ack_await":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      },
+      {
+         "required":{
+            "datatype":"text",
+            "mandatory":true,
+            "show":true,
+            "edit":true,
+            "create":false,
+            "active/cancel":"",
+            "default":[
+               {
+                  "value":"",
+                  "document_query":""
+               }
+            ],
+            "inputType":[
+               "dropdown",
+               "speech",
+               "handwritten",
+               "helper_function"
+            ],
+            "sym_validation":"",
+            "stm_validation":""
+         }
+      }
+      
+   ],
+   "page_attributes":{
+      "href":{
+         "host":"localhost",
+         "login_name":"root",
+         "password":"root"
+      },
+      "permissions_set1":{
+        "get":"address/contact, ack_await, required",
+        "show":[ 
+          "iaddress/contact", 
+          "ack_await", 
+          "required" 
+        ],
+         "create":true,
+         "view":true,
+         "edit":true,
+         "open":false,
+         "enable":true,
+         "print":true,
+         "roles":[
+            "Admin",
+            "user"
+         ]
+      },
+      "permissions_set2":{
+        "get":"address/contact, ack_await, required",
+        "show":[ 
+          "iaddress/contact", 
+          "ack_await", 
+          "required" 
+        ],
+         "create":true,
+         "view":true,
+         "edit":true,
+         "open":false,
+         "enable":true,
+         "print":true,
+         "roles":[
+            "Admin",
+            "user"
+         ]
+      }
+   }
+}
+      var key_reg_list={
+        "event":"key_reg_list",
+          "target":"key_reg",
+          "handler":"key_reg_list",
+          "query_str":"",
+          "controls":[
+            {"type":"button","name":"new","function":"create_modal(1)","class":"glyphicon glyphicon-pencil"},
+            {"type":"button","name":"first","function":"first_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"prev","function":"previous_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"next","function":"next_page()","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"last","function":"","class":"btn btn-primary btn-xs my-xs-btn"},
+            {"type":"button","name":"print","function":"","class":"btn btn-primary btn-xs my-xs-btn"}
+          ],
+          "page_attributes":{
+            "permissions_set1":{
+                "get":"id, key, room_id, entity_id, app_id, user_id, sub_msg_types, pub_msg_types, status",
+                "show":[ 
+                "id", 
+                "key", 
+                "room_id", 
+                "entity_id", 
+                "app_id", 
+                "user_id", 
+                "sub_msg_types", 
+                "pub_msg_types", 
+                "status"
+                ],
+                "create":true,
+                "view":true,
+                "edit":true,
+                "open":true,
+                "enable":true,
+                "print":true,
+                "roles":[
+                  "Admin"
+                ]
+            },
+            "permissions_set2":{
+              "get":"id, key, room_id, entity_id, app_id, user_id, sub_msg_types, pub_msg_types, status",
+                "show":[ 
+                "id", 
+                "key", 
+                "room_id", 
+                "entity_id", 
+                "app_id", 
+                "user_id", 
+                "sub_msg_types", 
+                "pub_msg_types", 
+                "status"
+                ],
+                "create":false,
+                "view":true,
+                "edit":false,
+                "open":true,
+                "enable":false,
+                "print":true,
+                "roles":[
+                  "User"
+                ]
+            },
+            "href":{
+                "host":"localhost",
+                "login_name":"root",
+                "password":"root"
+            }
+          }
+      }
+      var key_reg_details={
+      "event":"get_user_details",
+      "target":"admin",
+      "handler":"function name",
+      "query_str":"",
+      "ref_query_str1":"",
+      "ref_query_str2":"",
+      "fields":[
+        {
+            "id":{
+              "datatype":"text",
+              "mandatory":true,
+              "show":true,
+              "edit":true,
+              "create":false,
+              "active/cancel":"",
+              "default":[
+                  {
+                    "value":"",
+                    "document_query":""
+                  }
+              ],
+              "inputType":[
+                  "dropdown",
+                  "speech",
+                  "handwritten",
+                  "helper_function"
+              ],
+              "sym_validation":"",
+              "stm_validation":""
+            }
+        }, 
+        {
+            "key":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                  {
+                      "value":"",
+                      "document_query":""
+                  }
+                ],
+                "inputType":[
+                  "dropdown",
+                  "speech",
+                  "handwritten",
+                  "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+            }
+          },
+          {
+            "room_id":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                  {
+                      "value":"",
+                      "document_query":""
+                  }
+                ],
+                "inputType":[
+                  "dropdown",
+                  "speech",
+                  "handwritten",
+                  "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+            }
+          },
+          {
+            "entity_id":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                  {
+                      "value":"",
+                      "document_query":""
+                  }
+                ],
+                "inputType":[
+                  "dropdown",
+                  "speech",
+                  "handwritten",
+                  "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+            }
+          },
+          {
+            "app_id":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                  {
+                      "value":"",
+                      "document_query":""
+                  }
+                ],
+                "inputType":[
+                  "dropdown",
+                  "speech",
+                  "handwritten",
+                  "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+            }
+          },
+          {
+            "user_id":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                  {
+                      "value":"",
+                      "document_query":""
+                  }
+                ],
+                "inputType":[
+                  "dropdown",
+                  "speech",
+                  "handwritten",
+                  "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+            }
+          },
+          {
+            "room_id":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                  {
+                      "value":"",
+                      "document_query":""
+                  }
+                ],
+                "inputType":[
+                  "dropdown",
+                  "speech",
+                  "handwritten",
+                  "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+            }
+          },
+          {
+            "sub_msg_types":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                  {
+                      "value":"",
+                      "document_query":""
+                  }
+                ],
+                "inputType":[
+                  "dropdown",
+                  "speech",
+                  "handwritten",
+                  "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+            }
+          },
+          {
+            "pub_msg_types":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                  {
+                      "value":"",
+                      "document_query":""
+                  }
+                ],
+                "inputType":[
+                  "dropdown",
+                  "speech",
+                  "handwritten",
+                  "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+            }
+          },
+          {
+            "status":{
+                "datatype":"text",
+                "mandatory":true,
+                "show":true,
+                "edit":true,
+                "create":false,
+                "active/cancel":"",
+                "default":[
+                  {
+                      "value":"",
+                      "document_query":""
+                  }
+                ],
+                "inputType":[
+                  "dropdown",
+                  "speech",
+                  "handwritten",
+                  "helper_function"
+                ],
+                "sym_validation":"",
+                "stm_validation":""
+            }
+          }
+      ],
+      "page_attributes":{
+          "href":{
+            "host":"localhost",
+            "login_name":"root",
+            "password":"root"
+          },
+          "permissions_set1":{
+            "get":"id, key, room_id, entity_id, app_id, user_id, sub_msg_types, pub_msg_types, status",
+                "show":[ 
+                "id", 
+                "key", 
+                "room_id", 
+                "entity_id", 
+                "app_id", 
+                "user_id", 
+                "sub_msg_types", 
+                "pub_msg_types", 
+                "status"
+                ],
+            "create":true,
+            "view":true,
+            "edit":true,
+            "open":false,
+            "enable":true,
+            "print":true,
+            "roles":[
+                "Admin",
+                "user"
+            ]
+          },
+          "permissions_set2":{
+            "get":"id, key, room_id, entity_id, app_id, user_id, sub_msg_types, pub_msg_types, status",
+                "show":[ 
+                "id", 
+                "key", 
+                "room_id", 
+                "entity_id", 
+                "app_id", 
+                "user_id", 
+                "sub_msg_types", 
+                "pub_msg_types", 
+                "status"
+                ],
+            "create":true,
+            "view":true,
+            "edit":true,
+            "open":false,
+            "enable":true,
+            "print":true,
+            "roles":[
+                "Admin",
+                "user"
+            ]
+          }
+      }
+    }
+
+    let modal = document.querySelector(".modal")
+    var page_load_conf={
+          rows_PP:null,
+          sort_col:null,
+          page_count:0,
+          tab:"",
+          role:"",
+          event:"",
+          user_name:"",
+          sessionId:""
+      }
+      var referral_details={
+        camp_id:"",
+        ref_by:"",
+        ref_to:""
+      }
+      var tab_status={}
+      page_load_conf.user_name=localStorage.getItem("user_name");
+      page_load_conf.sessionId=localStorage.getItem("session_id");
+      page_load_conf.role=localStorage.getItem("u_role");
+      console.log(page_load_conf);
+      load_tabs()
+      
+      var field_val=[]; 
+      var pub_user_id=0;
+      var ifrm
+      var userkey="vjea24nr8yvwr42u56n3pwc6szmshc1p"
+      function load_tabs(){
+        var ul = document.getElementById("tab_list");
+        var tab_pg_content = document.getElementById("tab_page_content");
+        console.log("content:",tab_content);
+        var data=tab_content;
+        page_load_conf.role=localStorage.getItem("role");
+        page_load_conf.role="Super_Admin";
+        tab_list=data[page_load_conf.role].tab_list
+        console.log(tab_list[0])
+        for (var i = 0; i < tab_list.length; i++)
+          {
+            var li = document.createElement("li");  
+            var a = document.createElement("a");
+            
+            a.setAttribute('data-toggle','tab');
+            console.log(tab_list[i].function)
+            a.setAttribute('onclick',tab_list[i].function)
+            a.innerHTML = tab_list[i].Name;
+            a.setAttribute('href',"#"+tab_list[i].Name);
+
+            tab_href_div = document.createElement('div');
+            tab_href_div.setAttribute('id',tab_list[i].Name);
+            tab_href_div.setAttribute('class',"tab-pane fade");
+            tab_href_div.innerHTML="this is tab page "+ tab_list[i].Name;
+            
+            tab_pg_content.append(tab_href_div);
+            li.appendChild(a);
+            ul.appendChild(li);
+            //name=tab_list[i].Name;
+            tab_status[tab_list[i].Name] = 0;
+            //tab_status.push(tab_st_data)
+          }
+          console.log(tab_status);
+      }
+
+   
+      function get_entity_list(){
+        console.log("get_entity_list", tab_status, page_load_conf);
+        page_load_conf.tab="Entity";
+        page_load_conf.event="get_entity_list";
+        //page_load_conf.role=localStorage.getItem("u_role");
+        if(tab_status[page_load_conf.tab]==0){
+          var send_data=JSON.stringify({"key" : userkey});
+          console.log(send_data);
+          var end_point = "http://localhost:3000/entity/get";
+          console.log(end_point);
+          const getData = async(url=end_point,api_method="POST",api_body=send_data) => {     
+            console.log(api_body);
+            var response;
+            response = await fetch(url,{
+                method: api_method,
+                body: api_body,
+                headers : { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Access-Control-Allow-Origin':"*",
+                    'Authorization': 'Bearer ' + localStorage.getItem("token")
+                }
+            });
+            
+            if (response.ok) {
+                const raps = await response.json(); myresult = raps;
+            }
+            return (myresult);
+          }
+          getData().then(data => {
+            console.log(data);
+            data_ctrl= entity_list.controls;
+            data_config= entity_list.page_attributes.permissions_set1;
+            init_tab_prepartion(data,data_config,data_ctrl)   
+    
+            //init_tab_prepartion(data[0],data[1],data[2])   
+          });
+        }
+        console.log(tab_status); 
+      }
+      //}
+
+      function get_room_list(){
+        console.log("room_list", tab_status, page_load_conf);
+        page_load_conf.tab="Room";
+        page_load_conf.event="get_room_list";
+        page_load_conf.role=localStorage.getItem("u_role");
+        if(tab_status[page_load_conf.tab]==0){
+          var send_data=JSON.stringify({"key" : userkey});
+          console.log(send_data);
+          var end_point = "http://localhost:3000/room/get";
+          console.log(end_point);
+          const getData = async(url=end_point,api_method="POST",api_body=send_data) => {     
+            console.log(api_body);
+            var response;
+            response = await fetch(url,{
+                method: api_method,
+                body:api_body,
+                headers : { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Access-Control-Allow-Origin':"*",
+                    'Authorization': 'Bearer ' + localStorage.getItem("token")
+                }
+            });
+            
+            if (response.ok) {
+                const raps = await response.json(); myresult = raps;
+            }
+            return (myresult);
+          }
+          getData().then(data => {
+            console.log(data);
+            data_ctrl= room_list.controls;
+            data_config= room_list.page_attributes.permissions_set1;
+            init_tab_prepartion(data,data_config,data_ctrl)   
+    
+            //init_tab_prepartion(data[0],data[1],data[2])   
+          });
+        }
+        console.log(tab_status); 
+      }
+      
+      function get_inbox_list(){
+        console.log("inbox_list", tab_status, page_load_conf);
+        page_load_conf.tab="Inbox";
+        page_load_conf.event="get_inbox_list";
+        page_load_conf.role=localStorage.getItem("u_role");
+        if(tab_status[page_load_conf.tab]==0){
+          var send_data=JSON.stringify({"key" : userkey});
+          console.log(send_data);
+          var end_point = "http://localhost:3000/inbox/get";
+          console.log(end_point);
+          const getData = async(url=end_point,api_method="POST",api_body=send_data) => {     
+            console.log(api_body);
+            var response;
+            response = await fetch(url,{
+                method: api_method,
+                body:api_body,
+                headers : { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Access-Control-Allow-Origin':"*",
+                    'Authorization': 'Bearer ' + localStorage.getItem("token")
+                }
+            });
+            
+            if (response.ok) {
+                const raps = await response.json(); myresult = raps;
+            }
+            return (myresult);
+          }
+          getData().then(data => {
+            console.log(data);
+            data_ctrl= inbox_list.controls;
+            data_config= inbox_list.page_attributes.permissions_set1;
+            init_tab_prepartion(data,data_config,data_ctrl)   
+    
+            //init_tab_prepartion(data[0],data[1],data[2])   
+          });
+        }
+        console.log(tab_status); 
+      }
+      
+      function get_msgq_list(){
+        console.log("msgq_list", tab_status, page_load_conf);
+        page_load_conf.tab="Message_Queue";
+        page_load_conf.event="get_msgq_list";
+        page_load_conf.role=localStorage.getItem("u_role");
+        if(tab_status[page_load_conf.tab]==0){
+          var send_data=JSON.stringify({"key" : userkey});
+          console.log(send_data);
+          var end_point = "http://localhost:3000/msg/get";
+          console.log(end_point);
+          const getData = async(url=end_point,api_method="POST",api_body=send_data) => {     
+            console.log(api_body);
+            var response;
+            response = await fetch(url,{
+                method: api_method,
+                body:api_body,
+                headers : { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Access-Control-Allow-Origin':"*",
+                    'Authorization': 'Bearer ' + localStorage.getItem("token")
+                }
+            });
+            
+            if (response.ok) {
+                const raps = await response.json(); myresult = raps;
+            }
+            return (myresult);
+          }
+          getData().then(data => {
+            console.log(data);
+            data_ctrl= msgq_list.controls;
+            data_config= msgq_list.page_attributes.permissions_set1;
+            init_tab_prepartion(data,data_config,data_ctrl)   
+    
+            //init_tab_prepartion(data[0],data[1],data[2])   
+          });
+        }
+        console.log(tab_status); 
+      }
+
+      function get_archive_list(){
+        console.log("archive_list", tab_status, page_load_conf);
+        page_load_conf.tab="Archive";
+        page_load_conf.event="get_archive_list";
+        page_load_conf.role=localStorage.getItem("u_role");
+        if(tab_status[page_load_conf.tab]==0){
+          var send_data=JSON.stringify({"key" : userkey});
+          console.log(send_data);
+          var end_point = "http://localhost:3000/archive/get";
+          console.log(end_point);
+          const getData = async(url=end_point,api_method="POST",api_body=send_data) => {     
+            console.log(api_body);
+            var response;
+            response = await fetch(url,{
+                method: api_method,
+                body:api_body,
+                headers : { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Access-Control-Allow-Origin':"*",
+                    'Authorization': 'Bearer ' + localStorage.getItem("token")
+                }
+            });
+            
+            if (response.ok) {
+                const raps = await response.json(); myresult = raps;
+            }
+            return (myresult);
+          }
+          getData().then(data => {
+            console.log(data);
+            data_ctrl= archive_list.controls;
+            data_config= archive_list.page_attributes.permissions_set1;
+            init_tab_prepartion(data,data_config,data_ctrl)   
+    
+            //init_tab_prepartion(data[0],data[1],data[2])   
+          });
+        }
+        console.log(tab_status); 
+      }
+
+      function get_user_list(){
+        console.log("get_user_list", tab_status, page_load_conf);
+        page_load_conf.tab="Users";
+        page_load_conf.event="get_user_list";
+        page_load_conf.role=localStorage.getItem("u_role");
+        if(tab_status[page_load_conf.tab]==0){
+          var send_data=JSON.stringify({"key":userkey});
+          console.log(send_data);
+          var end_point = "http://localhost:3000/user/get";
+          console.log(end_point);
+          const getData = async(url=end_point,api_method="POST",api_body=send_data) => {     
+            console.log(api_body);
+            var response;
+            response = await fetch(url,{
+                method: api_method,
+                body: api_body,
+                headers : { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Access-Control-Allow-Origin':"*",
+                    'Authorization': 'Bearer ' + localStorage.getItem("token")
+                }
+            });
+            
+            if (response.ok) {
+                const raps = await response.json(); myresult = raps;
+            }
+            return (myresult);
+          }
+          getData().then(data => {
+            console.log(data);
+            data_ctrl= user_list.controls;
+            data_config= user_list.page_attributes.permissions_set1;
+            init_tab_prepartion(data,data_config,data_ctrl)   
+    
+            //init_tab_prepartion(data[0],data[1],data[2])   
+          });
+        }
+        console.log(tab_status); 
+      }
+      
+      function get_key_reg_list(){
+        console.log("get_key_list", tab_status, page_load_conf);
+        page_load_conf.tab="Key_Registration";
+        page_load_conf.event="key_reg_list";
+        page_load_conf.role=localStorage.getItem("u_role");
+        if(tab_status[page_load_conf.tab]==0){
+          var send_data=JSON.stringify({"key":userkey});
+          console.log(send_data);
+          var end_point = "http://localhost:3000/key/get";
+          console.log(end_point);
+          const getData = async(url=end_point,api_method="POST",api_body=send_data) => {     
+            console.log(api_body);
+            var response;
+            response = await fetch(url,{
+                method: api_method,
+                body: api_body,
+                headers : { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Access-Control-Allow-Origin':"*",
+                    'Authorization': 'Bearer ' + localStorage.getItem("token")
+                }
+            });
+            
+            if (response.ok) {
+                const raps = await response.json(); myresult = raps;
+            }
+            return (myresult);
+          }
+          getData().then(data => {
+            console.log(data);
+            data_ctrl= key_reg_list.controls;
+            data_config= key_reg_list.page_attributes.permissions_set1;
+            init_tab_prepartion(data,data_config,data_ctrl)   
+    
+            //init_tab_prepartion(data[0],data[1],data[2])   
+          });
+        }
+        console.log(tab_status); 
+      }
+
+      function init_tab_prepartion(result,per_config,controls){    
+        console.log(result,per_config);
+        //console.log(">>>>>",controls)
+        // console.log(result,per_config.create);
+        var count=2;
+        var reg_view_col_names=[""];
+        if (page_load_conf.tab!="Staff"){
+          for ( var property in result[0] ) { 
+            if( per_config['show'].includes(property) ){reg_view_col_names.push(property);}
+          }
+          console.log(reg_view_col_names)
+          
+          var n_col=per_config['show'].length;
+          try {
+              var table = document.getElementById("user_list");
+              for(var i = table.rows.length - 1; i > 0; i--){ table.deleteRow(i); }
+              table.deleteTHead();
+              var th=table.tHead.remove();
+          } catch (error) {
+            //console.log(error);
+          }
+        }
+        createTable(reg_view_col_names,result,per_config,page_load_conf.tab,controls);
+      }
+
+      function createTable(headerList, dataList,permission_config,tab_name,pg_controls) {
+          //console.log(headerList, dataList,permission_config,tab_name,pg_controls);
+          console.log(headerList)
+          console.log(dataList)
+          // populating content in specific tabs
+          var main= document.getElementById(tab_name)
+          main.setAttribute('tab','show');
+          main.innerHTML="";
+          var div_1= document.createElement('div');
+          div_1.setAttribute('id','div1')
+
+          for(var y=0;y<pg_controls.length;y++){
+            var btn=document.createElement(pg_controls[y].type);
+            btn.setAttribute('id','btn_'+pg_controls[y].name)
+            btn.setAttribute('onclick',pg_controls[y].function)
+            btn.setAttribute('class',pg_controls[y].class)
+            btn.innerHTML=pg_controls[y].name;
+            div_1.appendChild(btn);
+            console.log('created')
+              
+          }
+          main.appendChild(div_1);
+          var reg_controll_div_status=0
+          var bt_div=''; var table_div='';
+          if (page_load_conf.tab == "registration"){ bt_div='reg_pg_controll_sort';  table_div='user_list';}
+          if (page_load_conf.tab == "campaign"){ bt_div='reg_pg_controll_sort';  table_div='campaign_list';}
+          
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Code for Creating elements to take input of no of rows to be displayed in a page.
+          if(reg_controll_div_status==0){
+              var sel = document.createElement('select')
+            for (const val of headerList)
+            { 
+              if(val != ""){
+                  
+                var sort_option = document.createElement("option");
+                sort_option.value = val;
+                sort_option.text = val.charAt(0).toUpperCase() + val.slice(1);
+                sel.appendChild(sort_option);     
+              } 
+            }  
+            main.appendChild(sel);         
+            
+          // console.log(reg_controll_div_status," inside the loop");
+            var sort_label = document.createElement("label");
+            sort_label.innerHTML = "Sort"
+            sort_label.htmlFor = "sort_by";
+            
+            //main.appendChild(sort_label).appendChild(sort_select)
+            reg_controll_div_status=1;
+
+          }
+          //console.log(reg_controll_div_status);
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /*    Table creation header and data    */
+      
+        var table = document.createElement('table');
+        table.setAttribute( "class","table table-bordered")
+        // var tr = document.createElement('tr'); 
+        MyHeader = table.createTHead();
+        var MyRow = MyHeader.insertRow(0);
+        var colno=-1;
+        for (var j=-1;j<headerList.length;j++){
+          if (j==-1){var MyCell = MyRow.insertCell(colno);colno++;}
+          else{
+              var MyCell = MyRow.insertCell(colno);
+              colno++;
+              MyCell.innerHTML ="<strong  onclick='sortTable("+j+")'>"+headerList[j]+"</strong>"
+            //}
+          }
+        }
+
+        //  create data  rows in table ....
+        if(permission_config.open==true){
+          for (var i = 0; i < dataList.length; i++) {
+              var tr = document.createElement('tr'); // row
+              for (var j = 0; j < headerList.length; j++) {
+                  var td = document.createElement('td'); //column           
+                  //if(headerList[j] == "user_id" || headerList[j] == "status"){
+                  if(headerList[j] == "" ){
+                    //console.log("am user id");
+                    var text = document.createTextNode(""); //cell
+                    if(headerList[j] == ""){
+                      var button = document.createElement('button'+i);
+                      var span = document.createElement('span'+i);
+                    }
+                    else{
+                      var button = document.createElement('button_'+dataList[i].user_id);
+                      var span = document.createElement('span_'+dataList[i].user_id);
+                    }
+                    button.setAttribute('class', 'btn btn-primary btn-xs my-xs-btn');
+                    button.setAttribute('type', 'button');
+                    button.setAttribute('style','margin-right:16px');
+                    button.setAttribute('onclick',"");
+                    if(permission_config.edit==false){button.setAttribute('disabled','true');}
+                    else{
+                      if(headerList[j] == ""){
+                        
+                        span.setAttribute('class', 'glyphicon glyphicon-pencil');
+                        //console.log("id>>>>",dataList[i]['user_id'])
+                        span.setAttribute('onClick', 'create_modal('+dataList[i]['id']+')');
+                        if (page_load_conf.tab=="Advertisments"){
+                          span.innerHTML = 'Refer';
+                          span.setAttribute('onClick','');
+                      }
+                        //span.innerHTML = ' '+dataList[i][headerList[j]];
+                      }
+
+                      else{ 
+                        span.setAttribute('class', 'glyphicon glyphicon-ok');
+                        span.setAttribute('onClick', 'change_user_status('+dataList[i][headerList[j]]+')');
+                        span.innerHTML = ' '+dataList[i][headerList[j]];
+                      }
+                    }
+                      
+                    button.appendChild(span);
+                    td.appendChild(button);
+                    tr.appendChild(td);
+                    
+                  } 
+                  else{
+                    if(page_load_conf.tab=="Advertisements"){
+                      if(headerList[j]=="product_link"){
+                        var link_button = document.createElement('button'+j);
+                        var link_span = document.createElement('span'+j);
+
+                        link_button.setAttribute('class', 'btn btn-primary btn-xs my-xs-btn');
+                        link_button.setAttribute('type', 'button');
+                        link_button.setAttribute('style','margin-right:16px');
+                        link_button.setAttribute('onclick','product_details_iframe('+dataList[i][headerList[j]]+')');
+                        link_button.innerHTML="click for details"
+                        //button.appendChild(span);
+                        td.appendChild(link_button);
+                        tr.appendChild(td);
+                      }
+                    } 
+                    if ( (headerList[j] != "user_id") && (headerList[j] != "product_link") ){
+                      //console.log(">>>>>",headerList[j])
+                      var text = document.createTextNode(dataList[i][headerList[j]]); //cell
+                      td.appendChild(text);
+                      tr.appendChild(td);
+                    }
+                  }
+              }
+              table.appendChild(tr);
+          }
+          main.appendChild(table);
+        }
+      }
+
+      function previous_page(){
+        if(page_load_conf.page_count == 0){socket.emit('customer_list',page_load_conf);}
+        else{var cnt=parseInt(page_load_conf.page_count); cnt=cnt-1;page_load_conf.page_count=cnt;console.log(page_load_conf.page_count); socket.emit('customer_list',page_load_conf);}
+      }
+      
+      function next_page(){
+      // console.log(typeof (page_load_conf.page_count));
+        //(page_load_conf.page_count == 0){socket.emit('customer_list',page_load_conf);}
+        //else{
+          var cnt=parseInt(page_load_conf.page_count); cnt=cnt+1;page_load_conf.page_count=cnt;
+        //  console.log(page_load_conf.page_count);
+          socket.emit('customer_list',page_load_conf);
+        //}
+      }
+      
+      function first_page(){  page_load_conf.page_count=0; socket.emit('customer_list',page_load_conf);}
+
+      function create_modal(edit_user_id){
+        console.log("edit_user_id:" +edit_user_id);
+        pub_user_id=edit_user_id;
+        page_load_conf.role=localStorage.getItem("u_role");
+
+        console.log(page_load_conf);
+        var end_point="";
+        var req_method="";
+        var j_data;
+        if(page_load_conf.tab=="Entity"){
+          j_data={ "key": userkey, "where" : {"id":edit_user_id} };
+          end_point = "http://127.0.0.1:3000/entity/get";req_method="POST";
+        }
+
+        if(page_load_conf.tab=="Room"){
+          j_data={ "key": userkey, "where" : {"id":edit_user_id} };
+          end_point = "http://127.0.0.1:3000/room/get";req_method="POST";
+        }
+
+        if(page_load_conf.tab=="Inbox"){
+          j_data={ "key": userkey, "where" : {"id":edit_user_id} };
+          end_point = "http://127.0.0.1:3000/inbox/get";req_method="POST";
+        }
+
+        if(page_load_conf.tab=="Message_Queue"){
+          j_data={ "key": userkey, "where" : {"id":edit_user_id} };
+          end_point = "http://127.0.0.1:3000/msg/get";req_method="POST";
+        }
+
+        if(page_load_conf.tab=="Archive"){
+          j_data={ "key": userkey, "where" : {"id":edit_user_id} };
+          end_point = "http://127.0.0.1:3000/archive/get";req_method="POST";
+        }
+
+        if(page_load_conf.tab=="Users"){
+          j_data={ "key": userkey, "where" : {"id":edit_user_id} };
+          end_point = "http://127.0.0.1:3000/user/get";req_method="POST";
+        }
+
+        if(page_load_conf.tab=="Key_Registration"){
+          j_data={ "key": userkey, "where" : {"id":edit_user_id} };
+          end_point = "http://127.0.0.1:3000/key/get";req_method="POST";
+        }
+        
+        var send_data=JSON.stringify(j_data);
+        const getData = async(url=end_point,api_method=req_method,api_body=send_data) => {     
+          console.log(api_body);
+          var response;
+          response = await fetch(url,{
+              method: api_method,
+              body: api_body, // string or object
+              headers : { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Access-Control-Allow-Origin':"*"
+              }
+          });
+          
+          if (response.ok) {
+              const raps = await response.json(); myresult = raps,console.log("RESPONSE: ",response.json);
+          }
+          return (myresult);
+        }
+        getData().then(data => {
+          var data_result=[]
+          console.log(data.length)
+          console.log("this is my data",data);
+          data_key=Object.keys(data[0])
+      
+          for(var x=0;x<data_key.length;x++){ data_result.push(data[0][data_key[x]]) }
+          
+          console.log("data_result:::",data_result);
+
+          modal_response(data_result,edit_user_id,data_key)
+          //init_tab_prepartion(data[0],data[1],data[2])   
+        });
+        console.log("after");
+      }
+      
+      function modal_response(data,id_no,keys){
+          console.log("*********",data);
+          console.log(id_no);
+          console.log(keys);
+          var result=data; //console.log(result);
+          //var fields=keys;
+
+          referral_details.camp_id=id_no; //populating campaign id in object
+          referral_details.ref_by=page_load_conf.user_name
+          //console.log("ressss:",result);//console.log("fieldsss:",fields);//console.log("idssss",id_no);
+          field_val=keys
+          let modalBtn = document.getElementById("modal-btn")
+          
+          let closeBtn = document.querySelector(".close-btn")
+          var main= document.getElementById('modal_content')
+          var modaldiv=document.createElement('div');
+          console.log(page_load_conf)
+          refer_data=data
+          try {main.innerHTML="";}
+          catch (error) { }
+          if (page_load_conf.tab=="Advertisements"){
+            console.log("Advertisments tabs")
+            modaldiv.setAttribute('class','modal-body');
+            var bodydiv=document.createElement('div');
+            bodydiv.setAttribute('class','mb-3 mt-3');
+            console.log(data)
+
+            var init_div=document.createElement('div');
+            init_div.setAttribute('class','mb-3 mt-3');
+            var name_text=document.createElement('INPUT');
+            name_text.setAttribute("type", "text");
+            name_text.setAttribute("id", "name_t");
+            name_text.setAttribute("placeholder", "Enter Name");
+            var number_text=document.createElement('INPUT');
+            number_text.setAttribute("type", "text");
+            number_text.setAttribute("id", "number_t");
+            number_text.setAttribute("placeholder","Enter Contact");
+            var add_contact=document.createElement('button');
+            add_contact.setAttribute("onclick","register_user()"); 
+            add_contact.setAttribute('class','btn btn-success');
+            //add_contact.setAttribute('style',"float: left;");
+            add_contact.setAttribute("id","add_contact");
+            
+            add_contact.innerHTML=" + Add "
+
+            init_div.appendChild(name_text); init_div.appendChild(number_text);
+            init_div.appendChild(add_contact);modaldiv.appendChild(init_div);
+
+            for(var x=0;x<data.length;x++){
+              var check_box=document.createElement('INPUT');
+              check_box.setAttribute("type", "checkbox");
+              check_box.setAttribute("id", "ck_"+x);
+              //check_box.setAttribute("label", data[x][2]+data[x][3]);
+              //check_box.setAttribute('onclick','test_fun('+data+')')
+              bodydiv.appendChild(check_box);
+      
+              var label=document.createElement('lable');
+              label.setAttribute('class','form-label')
+              label.style.color='white';
+              //console.log(data[x][0]+' ('+data[x][1]+')')
+              label.innerHTML=' '+data[x][0]+'  ('+data[x][1]+')'
+              bodydiv.appendChild(label);
+              var next_line=document.createElement('br');
+              bodydiv.appendChild(next_line);
+              modaldiv.appendChild(bodydiv)
+              console.log("added")
+            }
+            var button=['Refer']
+            footer_div= document.createElement('div')
+            for(var x=0;x<button.length;x++){
+              
+              btn=document.createElement('button');
+              btn.setAttribute('class','btn btn-success');
+              btn.setAttribute('style',"float: left;");
+              btn.setAttribute("id",button[x]);
+              btn.addEventListener("click", function() {
+                    get_referal_input(data);
+              });
+              //btn.setAttribute('onClick', 'test_fun('+refer_data[0]+')');
+              btn.innerHTML=button[x];
+              footer_div.appendChild(btn)
+            }
+            
+            modaldiv.appendChild(footer_div)
+            main.appendChild(modaldiv);
+            modal.style.display = "block"
+          }
+          else{
+            /*for (var z=0;z<fields.length;z++){
+              //console.log(fields[0][z]);
+              var keys2=Object.keys(fields[z]);
+              console.log(keys2)
+              field_val.push(keys2[0])  
+            }*/
+            
+            if (page_load_conf.tab=="Users"){
+              field_val.push("address/contact");
+              field_val.push("ack_await");
+              field_val.push("required");
+            }
+            console.log(field_val);
+            var modaldiv=document.createElement('div');
+            modaldiv.setAttribute('class','modal-body');
+            try {main.innerHTML="";} 
+            catch (error) {}
+            if (page_load_conf.tab=="Entity"){config_json=get_entity_details;}
+            if (page_load_conf.tab=="Room"){config_json=get_room_details;}
+            if (page_load_conf.tab=="Inbox"){config_json=get_inbox_details;}
+            if (page_load_conf.tab=="Message_Queue"){config_json=get_msgq_details;}
+            if (page_load_conf.tab=="Archive"){config_json=get_archive_details;}
+            if (page_load_conf.tab=="Application"){config_json=get_app_details;}
+            if (page_load_conf.tab=="Users"){config_json=get_user_details;}
+            if (page_load_conf.tab=="Key_Registration"){config_json=key_reg_details;}
+            
+            try{
+              for(var x=0;x<field_val.length;x++){
+              console.log(field_val[x]);
+              console.log(config_json['fields'][x]);
+              console.log(config_json['fields'][x][field_val[x]]['show']);
+              
+              if(config_json['fields'][x][field_val[x]]['show']==true && field_val[x] !="status"){
+                var d=document.createElement('div');
+                d.setAttribute('class','mb-3 mt-3');
+                
+                var label=document.createElement('lable');
+                label.setAttribute('class','form-label')
+                label.style.color='white';
+
+                label.innerHTML=field_val[x]+':'
+                d.appendChild(label);
+
+                var u_input=document.createElement('input');
+                u_input.setAttribute("id",field_val[x]);
+                u_input.required;
+                //u_input.setAttribute("type","text");
+                u_input.setAttribute("type",config_json['fields'][x][field_val[x]]['datatype']);
+                u_input.setAttribute('class','form-control');
+                
+                if(config_json['fields'][x][field_val[x]]['edit']==false ){u_input.setAttribute('readOnly','true');}
+                if(config_json['fields'][x][field_val[x]]['create']==true ){u_input.setAttribute('value',"");}
+                else{
+                  //console.log(result[0][field_val[x]])
+                  try{
+                    if(result[x]==null){u_input.setAttribute('value',"");}
+                    else{
+                      console.log(field_val[x],result[x]);
+                      if(id_no != "1"){u_input.setAttribute('value',result[x]);}
+                      else{u_input.setAttribute('value',"");}
+                    }
+                  }
+                  catch{
+                    u_input.setAttribute('value',"");
+                  }
+                }
+                var next_line=document.createElement('br');
+                d.appendChild(u_input);
+                modaldiv.appendChild(d);modaldiv.appendChild(next_line);
+              }
+ 
+            }
+            }
+            catch{console.log("field not found")}
+            // adding status
+            try{
+              if(result[0]['status']!=""){
+                var status_div=document.createElement('div');
+                var st_label=document.createElement('lable');
+                st_label.setAttribute('class','form-label')
+                st_label.innerHTML="Status:"
+                st_label.style.color='white';
+                status_div.appendChild(st_label);
+
+                var st_select=document.createElement('select');
+                st_select.setAttribute('id','user_status')
+                var options=['active','inactive']
+                for(var x=0;x<options.length;x++){
+                  var st_option=document.createElement('option');
+                  st_option.innerHTML=options[x];
+                  st_select.appendChild(st_option)
+                  status_div.appendChild(st_select)
+                }
+              }
+              modaldiv.appendChild(status_div)
+            }catch(error){console.log(error)}
+            
+            var button=['Save']
+            for(var x=0;x<button.length;x++){
+              footer_div= document.createElement('div')
+              btn=document.createElement('button');
+              btn.setAttribute('class','btn btn-success');
+              btn.setAttribute('style',"float: left;");
+              btn.setAttribute("id",button[x]);
+              
+              btn.setAttribute("onclick","get_input()");
+              btn.innerHTML=button[x];
+              footer_div.appendChild(btn)
+            }
+            
+            modaldiv.appendChild(footer_div)
+            main.appendChild(modaldiv);
+            modal.style.display = "block"
+          }
+          
+          closeBtn.onclick = function(){
+            modal.style.display = "none"
+          }
+          window.onclick = function(e){
+            if(e.target == modal){
+              modal.style.display = "none"
+            }
+          }
+
+          //create_form(result);
+      }  
+
+    function DateToFormattedString(d) {         
+                                 
+      var yyyy = d.getFullYear().toString();                                    
+      var mm = (d.getMonth()+1).toString(); // getMonth() is zero-based         
+      var dd  = d.getDate().toString();             
+                          
+      return yyyy + '-' + (mm[1]?mm:"0"+mm[0]) + '-' + (dd[1]?dd:"0"+dd[0]);
+    };  
+
+    function register_user(){
+      alert(page_load_conf.user_name)
+      console.log(document.getElementById("name_t").value,document.getElementById("number_t").value)
+      u_name= document.getElementById("name_t").value;
+      u_number= document.getElementById("number_t").value;
+      let datenow = new Date();
+      var d1=datenow.toISOString()
+      cutm_data = 
+      {
+        event:"register_referal",
+        data:{
+          email: "dummy"+u_name+"@imarket.com",
+          first_name: u_name,
+          last_name: "",
+          username: u_number,
+          billing: {
+              first_name: u_name,
+              last_name: "",
+              company: "",
+              address_1: "",
+              address_2: "",
+              city: "",
+              state: "",
+              postcode: "",
+              country: "",
+              email: "dummy"+u_name+"@imarket.com",
+              phone: u_number
+          },
+          shipping: {
+              first_name: u_name,
+              last_name: "",
+              company: "",
+              address_1: "",
+              address_2: "",
+              city: "",
+              state: "",
+              postcode:"",
+              country: ""
+          }
+        },
+          session_id:page_load_conf.sessionId,
+          userID:"",
+          password:""
+      };
+    
+      console.log(cutm_data);
+      var send_data=JSON.stringify(cutm_data);
+      var end_point = "http://127.0.0.1:5000/register";
+      const getData = async(url=end_point,api_method="POST",api_body=send_data) => {     
+        console.log(api_body);
+        var response;
+        response = await fetch(url,{
+            method: api_method,
+            body: api_body, // string or object
+            headers : { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const raps = await response.json(); myresult = raps;
+        }
+        return (myresult);
+      }
+      getData().then(data => {
+        console.log(data)
+
+      });
+      
+    
+    }
+    
+    function get_input(){
+      console.log(field_val);
+      input_data=[];
+      var end_point = "";
+      var total_commision_val=0
+      var fail_stauts=0,cutm_data={}
+      for (var z=0;z<field_val.length;z++){
+        console.log(field_val[z]);
+        if(field_val[z] != 'user_name'){ 
+          const inpObj = document.getElementById(field_val[z]);
+          try{
+            console.log(field_val[z],":::",inpObj.value);
+
+            if(inpObj.value != ""|| fail_stauts==0){
+
+              if (!inpObj.checkValidity()) {
+                alert(inpObj.validationMessage); break;
+                //console.log(inpObj.validationMessage);
+              } else {
+                console.log("Input OK");input_data.push(inpObj.value)
+                //document.getElementById("demo").innerHTML = "Input OK";
+              }
+              
+            }
+            else{alert("please enter data in all the fields"); break;} 
+          }catch{console.log("Field named "+field_val[z]+" not found")};
+        }
+      }
+      input_data.push(document.getElementById('user_status').value)
+      console.log(input_data);
+      if (page_load_conf.tab=="Entity"){
+        if (input_data[0]==''){end_point = "http://localhost:3000/entity/add"}
+        else{end_point = "http://localhost:3000/entity/update";}
+        console.log("The opened tab is : ",page_load_conf.tab);
+        console.log("collected data: ",input_data);
+        cutm_data= { 
+          "key": userkey,
+          "where":{"id": input_data[0]},
+          "what" : {  
+            "entity_name":input_data[1],
+            "room_ids": input_data[2],
+            "activation_code": input_data[3],
+            "status": input_data[4]
+          }
+        }
+      }
+      if (page_load_conf.tab=="Room"){
+        if (input_data[0]==''){end_point = "http://localhost:3000/room/add"}
+        else{end_point = "http://localhost:3000/room/update";}
+        console.log("The opened tab is : ",page_load_conf.tab);
+        console.log("collected data: ",input_data);
+        cutm_data= { 
+          "key": userkey,
+          "where":{"id": input_data[0]},
+          "what" : {    
+            room_name:input_data[1],
+            message_types: input_data[2],
+            publisher_ids: input_data[3],
+            subscriber_ids: input_data[4],
+            q_limit : input_data[5],
+            q_occupancy: input_data[6],
+            timeout: input_data[7],
+            retries: input_data[8]
+          }
+        }
+      }
+      if (page_load_conf.tab=="Inbox"){
+        if (input_data[0]==''){end_point = "http://localhost:3000/inbox/add"}
+        else{end_point = "http://localhost:3000/inbox/update";}
+        console.log("The opened tab is : ",page_load_conf.tab);
+        console.log("collected data: ",input_data);
+        cutm_data= { 
+          "key": userkey,
+          "where":{"id": input_data[0]},
+          "what" : {    
+            target_entity:input_data[1],
+            room_id: input_data[2],
+            in_stamp: input_data[3],
+            out_stamp: input_data[4],
+            delivery_stamp : input_data[5],
+            msg_id: input_data[6],
+            retries: input_data[7],
+            status: input_data[8]
+          }
+        }
+      } 
+      if (page_load_conf.tab=="Message_Queue"){
+        if (input_data[0]==''){end_point = "http://localhost:3000/msgq/add"}
+        else{end_point = "http://localhost:3000/msgq/update";}
+        console.log("The opened tab is : ",page_load_conf.tab);
+        console.log("collected data: ",input_data);
+        cutm_data= { 
+          "key": userkey,
+          "where":{"id": input_data[0]},
+          "what" : {    
+            msg_body:input_data[1]
+          }
+        }
+      } 
+      if (page_load_conf.tab=="Archive"){
+        if (input_data[0]==''){end_point = "http://localhost:3000/archive/add"}
+        else{end_point = "http://localhost:3000/archive/update";}
+        console.log("The opened tab is : ",page_load_conf.tab);
+        console.log("collected data: ",input_data);
+        cutm_data= { 
+          "key": userkey,
+          "where":{"id": input_data[0]},
+          "what" : {    
+            inbox_id:input_data[1],
+            target_entity: input_data[2],
+            room_id: input_data[3],
+            in_stamp: input_data[4],
+            out_stamp: input_data[5],
+            delivery_stamp : input_data[6],
+            msg_id: input_data[7],
+            status: input_data[8]
+          }
+        }
+      } 
+      if (page_load_conf.tab=="Users"){
+        if (input_data[0]==''){end_point = "http://localhost:3000/user/add1"}
+        else{end_point = "http://localhost:3000/user/update";}
+        console.log("The opened tab is : ",page_load_conf.tab);
+        console.log("collected data: ",input_data);
+
+        var address= input_data[7].split(",")
+        var ack_await= input_data[8].split(",")
+        var required= input_data[9].split(",")
+        var res= {"contacts":[]}
+        for(var i=0;i<address.length;i++){
+          a={
+                "priority":i,
+                "address":address[i],
+                "ack_wait":ack_await[i],
+                "required":required[i]
+            }
+          res.contacts.push(a)
+        }
+        console.log( address, ack_await,required)
+        cutm_data= { 
+          "key": userkey,
+          "where":{"id": input_data[0]},
+          "what" : {    
+            key:input_data[1],
+            phone_no:input_data[2], 
+            inbox_url:input_data[3], 
+            person_or_app_name:input_data[4], 
+            role_ids:input_data[5],
+            contact_details : res
+          }
+        }
+      } 
+      if (page_load_conf.tab=="Key_Registration"){
+        if (input_data[0]==''){end_point = "http://localhost:3000/key/add"}
+        else{end_point = "http://localhost:3000/key/update";}
+        console.log("The opened tab is : ",page_load_conf.tab);
+        console.log("collected data: ",input_data);
+        cutm_data= { 
+          "key": userkey,
+          "where":{"id": input_data[0]},
+          "what" : {    
+            key:input_data[1],
+            room_id:input_data[2], 
+            entity_id:input_data[3], 
+            app_id:input_data[4], 
+            user_id:input_data[5], 
+            sub_msg_types:input_data[6], 
+            pub_msg_types:input_data[7], 
+            status:input_data[8]
+          }
+        }
+      }
+
+      console.log(cutm_data);
+      var send_data=JSON.stringify(cutm_data);
+          
+      const getData = async(url=end_point,api_method="POST",api_body=send_data) => {     
+        console.log(api_body);
+        var response;
+        response = await fetch(url,{
+            method: api_method,
+            body: api_body, // string or object
+            headers : { 
+                'Content-Type': 'application/json',
+                'Accept': 'plain/text'
+            }
+        });
+          
+        if (response.ok) {
+            const raps = await response.json(); myresult = raps;
+        }
+        return (myresult);
+      }
+      getData().then(data => {
+        console.log(data)
+        alert(data.Ack);  modal.style.display = "none";
+        if (page_load_conf.tab=="Entity"){get_entity_list();}
+        if (page_load_conf.tab=="Room"){get_room_list();}
+        if (page_load_conf.tab=="Inbox"){get_inbox_list();}
+        if (page_load_conf.tab=="Message_Queue"){get_msgq_list();}
+        if (page_load_conf.tab=="Archive"){get_archive_list();}
+
+      });  
+    }
+
+  </script>
+
+</html>
+

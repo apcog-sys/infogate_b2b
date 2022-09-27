@@ -1,0 +1,56 @@
+<html>
+<body>
+
+
+<!-- <button id="btn1" onclick="fetch_data()">get data</button> -->
+
+<label>Key:</label> <input id="key" type="text"></input> <br>
+<label>Message Type:</label> <input id="msg_type" type="text"></input> <br>
+<label>Message:</label> <input id="msg" type="text"></input> <br>
+<button id="btn1" onclick="send_data()">Submit</button> 
+</body>
+<script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<script>
+    function send_data(){
+        var data= { key:"", msg_type:"", msg:""}
+        var key=document.getElementById("key");
+        var msg_ty=document.getElementById("msg_type");
+        var msg=document.getElementById("msg");
+
+        //console.log(key.value, msg_ty.value, msg.value)
+        data.key=key.value; data.msg_type=msg_ty.value, data.msg=msg.value;
+        console.log(data)
+        
+
+        var end_point = "http://localhost:3000/room/put_msg";
+        //var end_point='http://localhost:3000/entity/getAllEntities'
+        const getData = async(url=end_point,api_method="POST",api_body=JSON.stringify(data)) => {     
+            console.log(api_body);
+            var response;
+            response = await fetch(url,{
+                method: api_method,
+                body: api_body,
+                headers : { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Access-Control-Allow-Origin':"*"
+                }
+        });
+        
+        if (response.ok) {
+            const raps = await response.json(); myresult = raps;
+        }
+        return (myresult);
+        }
+        getData().then(data => {
+        console.log(data)
+        //console.log(data.controls)
+        //init_tab_prepartion(data[0],data[1],data[2])   
+        });
+    }
+  
+</script>
+
+</html>
+

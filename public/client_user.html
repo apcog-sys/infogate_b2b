@@ -1,0 +1,68 @@
+<html>
+<body>
+
+
+<!-- <button id="btn1" onclick="fetch_data()">get data</button> -->
+
+<label>Username:</label> <input id="username_val" type="text"></input> <br>
+<label>Password:</label> <input id="password_val" type="text"></input> <br>
+<label>Entity Name:</label> <input id="entity_name_val" type="text"></input> <br>
+
+<label>Email:</label> <input id="email_val" type="text"></input> <br>
+<label>Inbox URL:</label> <input id="inbox_url_val" type="text"></input> <br>
+<label>Contact no:</label> <input id="contact_no_val" type="text"></input> <br>
+
+
+<button id="btn1" onclick="send_data()">Submit</button> 
+</body>
+<script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<script>
+    function send_data(){
+        var data= { Username:"", Password:"", Entity_Name:"", Email:"", Inbox_URL:"", Contact_no:""}
+        var username_val=document.getElementById("username_val");
+        var password_val=document.getElementById("password_val");
+        var entity_name_val=document.getElementById("entity_name_val");
+        var email_val=document.getElementById("email_val");
+        var inbox_url_val=document.getElementById("inbox_url_val");
+        var Contact_no=document.getElementById("contact_no_val");
+
+        //console.log(key.value, msg_ty.value, msg.value)
+        data.Username=username_val.value;          data.Password=password_val.value; 
+        data.Entity_Name=entity_name_val.value;    data.Email=email_val.value;
+        data.inbox_url_val=inbox_url_val.value;    data.Contact_no=contact_no_val.value; 
+
+        console.log(data)
+        
+
+        var end_point = "http://localhost:3000/room/put_msg";
+        //var end_point='http://localhost:3000/entity/getAllEntities'
+        const getData = async(url=end_point,api_method="POST",api_body=JSON.stringify(data)) => {     
+            console.log(api_body);
+            var response;
+            response = await fetch(url,{
+                method: api_method,
+                body: api_body,
+                headers : { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Access-Control-Allow-Origin':"*"
+                }
+        });
+        
+        if (response.ok) {
+            const raps = await response.json(); myresult = raps;
+        }
+        return (myresult);
+        }
+        getData().then(data => {
+        console.log(data)
+        //console.log(data.controls)
+        //init_tab_prepartion(data[0],data[1],data[2])   
+        });
+    }
+  
+</script>
+
+</html>
+
